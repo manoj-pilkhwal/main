@@ -1,0 +1,20 @@
+{
+  "name": "mongo",
+  "version": "1.0.0",
+  "description": "Simple MongoDB script",
+  "main": "mongo.js",
+  "scripts": {
+    "start": "node mongo.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/manoj-pilkhwal/main"
+  },
+  "keywords": [],
+  "author": "Manoj Singh",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/manoj-pilkhwal/main/issues"
+  },
+  "homepage": "https://github.com/manoj-pilkhwal/main#readme"
+}
