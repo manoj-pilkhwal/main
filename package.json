@@ -16,5 +16,8 @@
   "bugs": {
     "url": "https://github.com/manoj-pilkhwal/main/issues"
   },
-  "homepage": "https://github.com/manoj-pilkhwal/main#readme"
+  "homepage": "https://github.com/manoj-pilkhwal/main#readme",
+  "dependencies": {
+    "express": "^5.1.0"
+  }
 }
