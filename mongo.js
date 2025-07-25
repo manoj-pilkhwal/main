@@ -49,11 +49,19 @@ app.post('/shifts', async (req, res) => {
       return res.status(404).json({ success: false, message: 'Facility not found' });
     }
 
-    // Generate shift_id in format SHIFTDDMM
+    // Generate a unique shift_id in format SHIFTDDMM-XXXX
     const now = new Date();
     const day = String(now.getDate()).padStart(2, '0');
     const month = String(now.getMonth() + 1).padStart(2, '0');
-    const shift_id = `SHIFT${day}${month}`;
+
+    let shift_id;
+    let isUnique = false;
+    while (!isUnique) {
+      const random = Math.floor(1000 + Math.random() * 9000); // 4-digit random number
+      shift_id = `SHIFT${day}${month}-${random}`;
+      const existingId = await Shift.findOne({ shift_id });
+      if (!existingId) isUnique = true;
+    }
 
     // Create new shift
     const newShift = new Shift({
