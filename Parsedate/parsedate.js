@@ -22,14 +22,30 @@ app.post('/parse-datetime', (req, res) => {
   const parsedDate = results[0].start.date();
   const now = new Date();
 
+  // Reject past times
   if (parsedDate < now) {
     return res.json({ success: false, error: 'The provided date/time is in the past.' });
   }
 
-  const date_fm = parsedDate.toLocaleDateString('en-GB'); // DD/MM/YYYY
-  const hours = parsedDate.getHours().toString().padStart(2, '0');
-  const minutes = parsedDate.getMinutes().toString().padStart(2, '0');
-  const time_fm = `${hours}:${minutes}`; // HH:MM (24h)
+  // ⛔ Reject ambiguous time like "5" or "7:30" without AM/PM
+  const hasExplicitTime = /(\d{1,2})(:\d{2})?\s?(AM|PM)/i.test(input);
+  const hasTimeWithoutAmPm = /\b\d{1,2}(:\d{2})?\b/.test(input) && !hasExplicitTime;
+
+  if (hasTimeWithoutAmPm) {
+    return res.json({
+      success: false,
+      error: 'Time is ambiguous. Please specify AM or PM (e.g., "5 AM" or "5 PM").',
+      original_input: input
+    });
+  }
+
+  // Format
+  const date_fm = parsedDate.toLocaleDateString('en-GB');
+  const time_fm = parsedDate.toLocaleTimeString('en-US', {
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true,
+  });
 
   res.json({
     success: true,
