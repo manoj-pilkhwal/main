@@ -20,12 +20,13 @@ const shiftSchema = new mongoose.Schema({
   phone_number: { type: Number, required: true },
   shift_id: { type: String, required: true, unique: true },
   date: { type: String, required: true },
-  time: { type: String, required: true }
+  time: { type: String, required: true },
+  user_name: { type: String } // ✅ new optional field
 });
 
 const Shift = mongoose.model('Shift', shiftSchema);
 
-// Create Shift API
+// POST API — DO NOT TOUCH
 app.post('/shifts', async (req, res) => {
   try {
     const { facility_id, date, time } = req.body;
@@ -34,7 +35,6 @@ app.post('/shifts', async (req, res) => {
       return res.status(400).json({ success: false, message: 'facility_id, date, and time are required' });
     }
 
-    // Check if a shift already exists for the same facility_id, date, and time
     const existingShift = await Shift.findOne({ facility_id, date, time });
     if (existingShift) {
       return res.status(409).json({
@@ -43,13 +43,11 @@ app.post('/shifts', async (req, res) => {
       });
     }
 
-    // Get facility details from existing data
     const referenceFacility = await Shift.findOne({ facility_id });
     if (!referenceFacility) {
       return res.status(404).json({ success: false, message: 'Facility not found' });
     }
 
-    // Generate a unique shift_id in format SHIFTDDMM-XXXX
     const now = new Date();
     const day = String(now.getDate()).padStart(2, '0');
     const month = String(now.getMonth() + 1).padStart(2, '0');
@@ -57,20 +55,20 @@ app.post('/shifts', async (req, res) => {
     let shift_id;
     let isUnique = false;
     while (!isUnique) {
-      const random = Math.floor(1000 + Math.random() * 9000); // 4-digit random number
+      const random = Math.floor(1000 + Math.random() * 9000);
       shift_id = `SHIFT${day}${month}-${random}`;
       const existingId = await Shift.findOne({ shift_id });
       if (!existingId) isUnique = true;
     }
 
-    // Create new shift
     const newShift = new Shift({
       facility_id,
       hospital_name: referenceFacility.hospital_name,
       phone_number: referenceFacility.phone_number,
       shift_id,
       date,
-      time
+      time,
+      user_name: referenceFacility.user_name || null // Preserve user_name if exists
     });
 
     await newShift.save();
@@ -85,7 +83,7 @@ app.post('/shifts', async (req, res) => {
   }
 });
 
-// Get facility by phone_number
+// ✅ Updated GET API to include user_name
 app.get('/facility', async (req, res) => {
   try {
     const { phone_number } = req.query;
@@ -101,7 +99,8 @@ app.get('/facility', async (req, res) => {
 
     res.json({
       facility_id: facility.facility_id,
-      hospital_name: facility.hospital_name
+      hospital_name: facility.hospital_name,
+      user_name: facility.user_name || '' // Return user_name if available
     });
   } catch (err) {
     res.status(500).json({ message: err.message });
